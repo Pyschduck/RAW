@@ -30,6 +30,6 @@ void uart_receive_data(uart_port_t uart_num, uint8_t *data, size_t length)
 {
     int len = uart_read_bytes(uart_num, data, length, 100 / portTICK_PERIOD_MS);
     if (len > 0) {
-        data[len] = '\0'; // Null-terminate the received data
+        data[len] = '\0';
     }
 }
