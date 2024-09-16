@@ -36,5 +36,6 @@ extern int i2c_slave_port;
 esp_err_t i2c_master_init(void);
 esp_err_t i2c_master_send(uint8_t message[], int len);
 esp_err_t i2c_slave_init(void);
+void i2c_slave_read(void);  // Updated return type to void
 
 #endif // I2C_LIB_H
