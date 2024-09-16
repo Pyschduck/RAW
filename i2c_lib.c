@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>  // Include this for memset
 #include "esp_log.h"
 #include "driver/i2c.h"
 #include "i2c_lib.h"
@@ -80,4 +81,16 @@ esp_err_t i2c_slave_init(void)
     }
 
     return err;
+}
+
+void i2c_slave_read(void)  // Updated return type to void
+{
+    uint8_t  received_data[I2C_SLAVE_RX_BUF_LEN] = {0};
+
+    i2c_slave_read_buffer(i2c_slave_port, received_data, I2C_SLAVE_RX_BUF_LEN, 100 / portTICK_PERIOD_MS);
+    i2c_reset_rx_fifo(i2c_slave_port);
+
+    ESP_LOGI(SLAVE_TAG, "Data Received = %s", received_data);
+
+    memset(received_data, 0, I2C_SLAVE_RX_BUF_LEN);
 }
