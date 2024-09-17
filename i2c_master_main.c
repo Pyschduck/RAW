@@ -26,6 +26,6 @@ void app_main(void)
             ESP_LOGI(TAG, "I2C message sent successfully: %s", message);
         }
 
-        vTaskDelay(500 / portTICK_PERIOD_MS);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
     }
 }
