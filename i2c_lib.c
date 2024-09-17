@@ -106,12 +106,13 @@ esp_err_t slave_init(int sda, int scl)
 
     return err;
 }
-
+  uint8_t received_data[I2C_SLAVE_RX_BUF_LEN] = {0};
 void slave_read(void)
 {
-    uint8_t received_data[I2C_SLAVE_RX_BUF_LEN] = {0};
-    i2c_slave_read_buffer(i2c_slave_port, received_data, I2C_SLAVE_RX_BUF_LEN, 1000 / portTICK_PERIOD_MS);
+  
+    i2c_slave_read_buffer(i2c_slave_port, received_data, I2C_SLAVE_RX_BUF_LEN, 100 / portTICK_PERIOD_MS);
     i2c_reset_rx_fifo(i2c_slave_port);
 
     ESP_LOGI(SLAVE_TAG, "Data Received: %s", received_data);
+    memset(received_data, 0, I2C_SLAVE_RX_BUF_LEN);
 }
