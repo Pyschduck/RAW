@@ -14,6 +14,6 @@ void app_main(void)
 
     while (1) {
         slave_read();
-        vTaskDelay(100 / portTICK_PERIOD_MS);
+        
     }
 }
