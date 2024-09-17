@@ -4,7 +4,6 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 #define TAG "i2c-master"
 #define SLAVE_ADDRESS 0xA
 
@@ -16,17 +15,17 @@ void app_main(void)
         return;
     }
     ESP_LOGI(TAG, "I2C master initialized successfully");
-    uint8_t message[] = "Hello, I2C Slave!";
-    int size = ARRAY_SIZE(message);
+    uint8_t message[] = "Hello";
+
     while (1) {
         
-        ret = master_write(message,size);
+        ret = master_write(message,sizeof(message));
         if (ret != ESP_OK) {
             ESP_LOGE(TAG, "Failed to send I2C message: %s", esp_err_to_name(ret));
         } else {
             ESP_LOGI(TAG, "I2C message sent successfully: %s", message);
         }
 
-        vTaskDelay(100 / portTICK_PERIOD_MS);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
