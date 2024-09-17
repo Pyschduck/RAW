@@ -12,15 +12,12 @@ const char *TAG = "slave";
 
 void app_main(void)
 {
- // Set LED pin as output
 
-    // Initialize I2C slave
-    ESP_ERROR_CHECK(i2c_slave_init());
+    ESP_ERROR_CHECK(slave_init(21,22));
     ESP_LOGI(TAG, "I2C Slave initialized successfully");
 
     while(1) {
-        i2c_slave_read();
-        // Add a small delay to avoid continuous polling
+        slave_read();
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
 }
