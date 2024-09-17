@@ -5,7 +5,7 @@
 #include "esp_err.h"
 
 #define I2C_MASTER_FREQ_HZ 100000          /*!< I2C master clock frequency */
-#define I2C_MASTER_TX_BUF_DISABLE 0        /*!< freq master doesn't need buffer */
+#define I2C_MASTER_TX_BUF_DISABLE 0        /*!< I2C master doesn't need buffer */
 #define I2C_MASTER_RX_BUF_DISABLE 0        /*!< I2C master doesn't need buffer */
 #define I2C_MASTER_RX_BUF_LEN 255
 #define I2C_MASTER_TX_BUF_LEN 255
@@ -25,9 +25,9 @@ extern int i2c_master_port;
 extern int i2c_slave_port;
 
 esp_err_t master_init(int sda, int scl);
-esp_err_t master_write(void* data, size_t len);
+esp_err_t master_write(uint8_t message[], int len);
+esp_err_t master_read(void* data, size_t len);
 esp_err_t slave_init(int sda, int scl);
 void slave_read(void);
-esp_err_t master_read(void* data, size_t len);
 
 #endif
