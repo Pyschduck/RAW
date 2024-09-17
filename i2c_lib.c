@@ -8,7 +8,7 @@ static const char *MASTER_TAG = "i2c-master";
 static const char *SLAVE_TAG = "i2c-slave";
 
 int i2c_master_port = 0;
-int i2c_slave_port = 1;
+int i2c_slave_port = 0;
 
 static unsigned char SLAVE_ADDRESS = 0xA; 
 
