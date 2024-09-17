@@ -40,11 +40,11 @@ esp_err_t master_init(int sda, int scl)
     return err;
 }
 
-esp_err_t master_write(void* data, size_t len, unsigned char slave_addr)
+esp_err_t master_write(void* data, size_t len)
 {
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
     i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (slave_addr << 1) | WRITE_BIT, ACK_CHECK_EN);
+    i2c_master_write_byte(cmd, (SLAVE_ADDRESS << 1) | WRITE_BIT, ACK_CHECK_EN);
     i2c_master_write(cmd, (uint8_t*)data, len, ACK_CHECK_EN);
     i2c_master_stop(cmd);
 
@@ -58,11 +58,11 @@ esp_err_t master_write(void* data, size_t len, unsigned char slave_addr)
     return ret;
 }
 
-esp_err_t master_read(void* data, size_t len, unsigned char slave_addr)
+esp_err_t master_read(void* data, size_t len)
 {
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
     i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (slave_addr << 1) | READ_BIT, ACK_CHECK_EN);
+    i2c_master_write_byte(cmd, (SLAVE_ADDRESS << 1) | READ_BIT, ACK_CHECK_EN);
     i2c_master_read(cmd, (uint8_t*)data, len, I2C_MASTER_LAST_NACK);
     i2c_master_stop(cmd);
 
@@ -110,7 +110,7 @@ esp_err_t slave_init(int sda, int scl)
 void slave_read(void)
 {
     uint8_t received_data[I2C_SLAVE_RX_BUF_LEN] = {0};
-    i2c_slave_read_buffer(i2c_slave_port, received_data, I2C_SLAVE_RX_BUF_LEN, 100 / portTICK_PERIOD_MS);
+    i2c_slave_read_buffer(i2c_slave_port, received_data, I2C_SLAVE_RX_BUF_LEN, 1000 / portTICK_PERIOD_MS);
     i2c_reset_rx_fifo(i2c_slave_port);
 
     ESP_LOGI(SLAVE_TAG, "Data Received: %s", received_data);
