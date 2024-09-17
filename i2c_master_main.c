@@ -16,10 +16,11 @@ void app_main(void)
         return;
     }
     ESP_LOGI(TAG, "I2C master initialized successfully");
-
+    uint8_t message[] = "Hello, I2C Slave!";
+    int size = ARRAY_SIZE(message);
     while (1) {
-        uint8_t message[] = "Hello, I2C Slave!";
-        ret = master_write(message, ARRAY_SIZE(message), SLAVE_ADDRESS);
+        
+        ret = master_write(message,size);
         if (ret != ESP_OK) {
             ESP_LOGE(TAG, "Failed to send I2C message: %s", esp_err_to_name(ret));
         } else {
