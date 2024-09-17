@@ -25,9 +25,9 @@ extern int i2c_master_port;
 extern int i2c_slave_port;
 
 esp_err_t master_init(int sda, int scl);
-esp_err_t master_write(void* data, size_t len, unsigned char slave_addr);
+esp_err_t master_write(void* data, size_t len);
 esp_err_t slave_init(int sda, int scl);
 void slave_read(void);
-esp_err_t master_read(void* data, size_t len, unsigned char slave_addr);
+esp_err_t master_read(void* data, size_t len);
 
 #endif
