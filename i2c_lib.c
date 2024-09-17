@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <string.h>  // Include this for memset
+#include <string.h> 
 #include "esp_log.h"
 #include "driver/i2c.h"
 #include "i2c_lib.h"
@@ -7,12 +7,16 @@
 static const char *MASTER_TAG = "i2c-master";
 static const char *SLAVE_TAG = "i2c-slave";
 
-// Global Variables
-int i2c_master_port = I2C_NUM_0;  // Default to I2C_NUM_0, update if needed
-int i2c_slave_port = I2C_NUM_1;   // Default to I2C_NUM_1, update if needed
+int i2c_master_port = I2C_NUM_0;  
+int i2c_slave_port = I2C_NUM_1;
 
-esp_err_t i2c_master_init(void)
+static unsigned char SLAVE_ADDRESS;
+
+esp_err_t master_init(int sda, int scl)
 {
+    int I2C_MASTER_SCL_IO = scl;             
+    int I2C_MASTER_SDA_IO = sda;
+ 
     i2c_config_t conf = {
         .mode = I2C_MODE_MASTER,
         .sda_io_num = I2C_MASTER_SDA_IO,
@@ -36,8 +40,9 @@ esp_err_t i2c_master_init(void)
     return err;
 }
 
-esp_err_t i2c_master_send(uint8_t message[], int len)
+esp_err_t master_write(uint8_t message[], int len,unsigned char slave_addr)
 {
+    SLAVE_ADDRESS = slave_addr; 
     ESP_LOGI(MASTER_TAG, "Sending Message = %s", message);
     
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
@@ -56,8 +61,10 @@ esp_err_t i2c_master_send(uint8_t message[], int len)
     return ret;
 }
 
-esp_err_t i2c_slave_init(void)
-{
+esp_err_t slave_init(int sda,int scl)
+{ 
+    int I2C_SLAVE_SDA_IO =sda;
+    int I2C_SLAVE_SCL_IO = scl;
     i2c_config_t conf_slave = {
         .sda_io_num = I2C_SLAVE_SDA_IO,
         .sda_pullup_en = GPIO_PULLUP_ENABLE,
@@ -65,7 +72,7 @@ esp_err_t i2c_slave_init(void)
         .scl_pullup_en = GPIO_PULLUP_ENABLE,
         .mode = I2C_MODE_SLAVE,
         .slave.addr_10bit_en = 0,
-        .slave.slave_addr = ESP_SLAVE_ADDR,
+        .slave.slave_addr = SLAVE_ADDRESS,
         .clk_flags = 0,
     };
 
@@ -83,7 +90,7 @@ esp_err_t i2c_slave_init(void)
     return err;
 }
 
-void i2c_slave_read(void)  // Updated return type to void
+void slave_read(void)  
 {
     uint8_t  received_data[I2C_SLAVE_RX_BUF_LEN] = {0};
 
