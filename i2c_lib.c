@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <string.h> 
+#include <string.h>
 #include "esp_log.h"
 #include "driver/i2c.h"
 #include "i2c_lib.h"
@@ -7,16 +7,16 @@
 static const char *MASTER_TAG = "i2c-master";
 static const char *SLAVE_TAG = "i2c-slave";
 
-int i2c_master_port = I2C_NUM_0;  
+int i2c_master_port = I2C_NUM_0;
 int i2c_slave_port = I2C_NUM_1;
 
-static unsigned char SLAVE_ADDRESS;
+static unsigned char SLAVE_ADDRESS = 0xA; 
 
 esp_err_t master_init(int sda, int scl)
 {
-    int I2C_MASTER_SCL_IO = scl;             
+    int I2C_MASTER_SCL_IO = scl;
     int I2C_MASTER_SDA_IO = sda;
- 
+
     i2c_config_t conf = {
         .mode = I2C_MODE_MASTER,
         .sda_io_num = I2C_MASTER_SDA_IO,
@@ -42,20 +42,17 @@ esp_err_t master_init(int sda, int scl)
 
 esp_err_t master_write(void* data, size_t len, unsigned char slave_addr)
 {
-    SLAVE_ADDRESS = slave_addr;
-    ESP_LOGI(MASTER_TAG, "Sending Data of length = %d", len);
-
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
     i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, SLAVE_ADDRESS << 1 | I2C_MASTER_WRITE, true);
-    i2c_master_write(cmd, (uint8_t*)data, len, true);
+    i2c_master_write_byte(cmd, (slave_addr << 1) | WRITE_BIT, ACK_CHECK_EN);
+    i2c_master_write(cmd, (uint8_t*)data, len, ACK_CHECK_EN);
     i2c_master_stop(cmd);
 
-    esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_PERIOD_MS);
+    esp_err_t ret = i2c_master_cmd_begin(i2c_master_port, cmd, 1000 / portTICK_PERIOD_MS);
     i2c_cmd_link_delete(cmd);
 
     if (ret != ESP_OK) {
-        ESP_LOGE(MASTER_TAG, "I2C command failed: %s", esp_err_to_name(ret));
+        ESP_LOGE(MASTER_TAG, "I2C master write failed: %s", esp_err_to_name(ret));
     }
 
     return ret;
@@ -63,40 +60,37 @@ esp_err_t master_write(void* data, size_t len, unsigned char slave_addr)
 
 esp_err_t master_read(void* data, size_t len, unsigned char slave_addr)
 {
-    SLAVE_ADDRESS = slave_addr;
-    ESP_LOGI(MASTER_TAG, "Reading Data of length = %d", len);
-
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
     i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, SLAVE_ADDRESS << 1 | I2C_MASTER_READ, true);
+    i2c_master_write_byte(cmd, (slave_addr << 1) | READ_BIT, ACK_CHECK_EN);
     i2c_master_read(cmd, (uint8_t*)data, len, I2C_MASTER_LAST_NACK);
     i2c_master_stop(cmd);
 
-    esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_PERIOD_MS);
+    esp_err_t ret = i2c_master_cmd_begin(i2c_master_port, cmd, 1000 / portTICK_PERIOD_MS);
     i2c_cmd_link_delete(cmd);
 
     if (ret != ESP_OK) {
-        ESP_LOGE(MASTER_TAG, "I2C read failed: %s", esp_err_to_name(ret));
+        ESP_LOGE(MASTER_TAG, "I2C master read failed: %s", esp_err_to_name(ret));
     } else {
-        ESP_LOGI(MASTER_TAG, "Data Received: %s", (char*)data);
+        ESP_LOGI(MASTER_TAG, "Data received: %s", (char*)data);
     }
 
     return ret;
 }
 
 esp_err_t slave_init(int sda, int scl)
-{ 
-    int I2C_SLAVE_SDA_IO = sda;
+{
     int I2C_SLAVE_SCL_IO = scl;
+    int I2C_SLAVE_SDA_IO = sda;
+
     i2c_config_t conf_slave = {
+        .mode = I2C_MODE_SLAVE,
         .sda_io_num = I2C_SLAVE_SDA_IO,
         .sda_pullup_en = GPIO_PULLUP_ENABLE,
         .scl_io_num = I2C_SLAVE_SCL_IO,
         .scl_pullup_en = GPIO_PULLUP_ENABLE,
-        .mode = I2C_MODE_SLAVE,
         .slave.addr_10bit_en = 0,
         .slave.slave_addr = SLAVE_ADDRESS,
-        .clk_flags = 0,
     };
 
     esp_err_t err = i2c_param_config(i2c_slave_port, &conf_slave);
@@ -113,36 +107,11 @@ esp_err_t slave_init(int sda, int scl)
     return err;
 }
 
-void slave_read(void)  
+void slave_read(void)
 {
-    uint8_t  received_data[I2C_SLAVE_RX_BUF_LEN] = {0};
-
+    uint8_t received_data[I2C_SLAVE_RX_BUF_LEN] = {0};
     i2c_slave_read_buffer(i2c_slave_port, received_data, I2C_SLAVE_RX_BUF_LEN, 100 / portTICK_PERIOD_MS);
     i2c_reset_rx_fifo(i2c_slave_port);
 
-    ESP_LOGI(SLAVE_TAG, "Data Received = %s", received_data);
-
-    memset(received_data, 0, I2C_SLAVE_RX_BUF_LEN);
-}
-
-esp_err_t slave_write(void* data, size_t len)
-{
-    ESP_LOGI(SLAVE_TAG, "Writing Data of length = %d", len);
-
-    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, SLAVE_ADDRESS << 1 | I2C_MASTER_WRITE, true);
-    i2c_master_write(cmd, (uint8_t*)data, len, true);
-    i2c_master_stop(cmd);
-
-    esp_err_t ret = i2c_master_cmd_begin(i2c_slave_port, cmd, 1000 / portTICK_PERIOD_MS);
-    i2c_cmd_link_delete(cmd);
-
-    if (ret != ESP_OK) {
-        ESP_LOGE(SLAVE_TAG, "I2C write failed: %s", esp_err_to_name(ret));
-    } else {
-        ESP_LOGI(SLAVE_TAG, "Data Written: %s", (char*)data);
-    }
-
-    return ret;
+    ESP_LOGI(SLAVE_TAG, "Data Received: %s", received_data);
 }
