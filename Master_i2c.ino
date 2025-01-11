@@ -15,8 +15,8 @@ struct PS4Data {
 
 void setup() {
   Serial.begin(9600);
-  Wire.begin();  // Initialize I2C as master
-  PS4.begin("78:2b:46:91:ef:af");  // Initialize PS4 controller with MAC address
+  Wire.begin();  
+  PS4.begin("78:2b:46:91:ef:af");
 }
 
 void loop() {
@@ -32,12 +32,12 @@ void loop() {
     data.Triangle = PS4.Triangle();
     data.touchpad = PS4.Touchpad();
 
-    Wire.beginTransmission(0x01);  // Begin transmission to slave with address 0x01
-    Wire.write((uint8_t*)&data, sizeof(data));  // Send PS4 data
-    byte checksum = calculateChecksum((uint8_t*)&data, sizeof(data));  // Calculate checksum
-    Wire.write(checksum);  // Send checksum
+    Wire.beginTransmission(0x01);  
+    Wire.write((uint8_t*)&data, sizeof(data)); 
+    byte checksum = calculateChecksum((uint8_t*)&data, sizeof(data)); 
+    Wire.write(checksum); 
 
-    byte error = Wire.endTransmission();  // End transmission
+    byte error = Wire.endTransmission(); 
 
     if (error == 0) {
       Serial.println("Data sent successfully to Slave 0x01");
