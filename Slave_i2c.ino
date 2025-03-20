@@ -1,49 +1,50 @@
 #include <Wire.h>
 
+#define I2C_SDA 8
+#define I2C_SCL 9
+#define SLAVE_ADDR 0x08
+
+// Define struct for PS4 data (must match master)
 struct PS4Data {
-  int LStickX;
-  int LStickY;
-  int RStickX;
-  int RStickY;
-  bool Square;
-  bool Cross;
-  bool Circle;
-  bool Triangle;
-  bool touchpad;
+    int LStickX;
+    int LStickY;
+    int RStickX;
+    int RStickY;
+    bool Square;
+    bool Cross;
+    bool Circle;
+    bool Triangle;
+    bool touchpad;
+    bool Up;
+    bool Down;
+    bool Left;
+    bool Right;
+    bool L1;
+    bool R1;
+    int L2;
+    int R2;
 };
 
+PS4Data ps4Data;
+
+void receiveEvent(int bytes) {
+    if (bytes == sizeof(PS4Data)) { // Ensure full struct is received
+        Wire.readBytes((uint8_t*)&ps4Data, sizeof(ps4Data)); // Read struct
+
+        Serial.printf("Received: LX:%d LY:%d RX:%d RY:%d SQ:%d X:%d O:%d TRI:%d TP:%d UP:%d DOWN:%d LEFT:%d RIGHT:%d L1:%d R1:%d L2:%d R2:%d\n",
+                      ps4Data.LStickX, ps4Data.LStickY, ps4Data.RStickX, ps4Data.RStickY,
+                      ps4Data.Square, ps4Data.Cross, ps4Data.Circle, ps4Data.Triangle,
+                      ps4Data.touchpad, ps4Data.Up, ps4Data.Down, ps4Data.Left, ps4Data.Right,
+                      ps4Data.L1, ps4Data.R1, ps4Data.L2, ps4Data.R2);
+    }
+}
+
 void setup() {
-  Serial.begin(9600);
-  Wire.begin(0x01);  
-  Wire.onReceive(receiveEvent); 
+    Serial.begin(115200);
+    Wire.begin(SLAVE_ADDR);
+    Wire.onReceive(receiveEvent);
 }
 
 void loop() {
- 
-}
-
-void receiveEvent(int howMany) {
-  if (howMany >= sizeof(PS4Data) + 1) { 
-    PS4Data data;
-    Wire.readBytes((char*)&data, sizeof(data));  
-
-    byte receivedChecksum = Wire.read();  
-    byte calculatedChecksum = calculateChecksum((uint8_t*)&data, sizeof(data)); 
-
-    if (receivedChecksum == calculatedChecksum) {
-
-      Serial.print("Circle: "); Serial.println(data.Circle);
-
-    } else {
-      Serial.println("Checksum mismatch! Data corrupted.");
-    }
-  }
-}
-
-byte calculateChecksum(uint8_t *data, size_t length) {
-  byte sum = 0;
-  for (size_t i = 0; i < length; i++) {
-    sum += data[i];
-  }
-  return sum;
+    // delay(100);
 }
